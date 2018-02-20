@@ -71,9 +71,10 @@ def search_by_trending(q , page ):
 
 	url = url_builder(http_address, **kwargs)
 
-	f = requests.get(url)
+	content = requests.get(url)
 
-	return f.json()['recipes'][0]['recipe_id']
+	#I return the first value since that value is the most trending recipe id
+	return content.json()['recipes'][0]['recipe_id']
 
 def search_by_rating(q , page ):
 	'''
@@ -87,9 +88,10 @@ def search_by_rating(q , page ):
 	
 	url = url_builder(http_address, **kwargs)
 
-	f = requests.get(url)
+	content = requests.get(url)
 
-	return f.json()['recipes'][0]['recipe_id']
+	#I return the first value since that value is the most highly rated recipe id
+	return content.json()['recipes'][0]['recipe_id']
 
 def get_recipe(recipe_id):
 	'''
@@ -101,9 +103,9 @@ def get_recipe(recipe_id):
 
 	url = url_builder(http_address, **kwargs)
 
-	f = requests.get(url)
+	content = requests.get(url)
 
-	print(f.json()['recipe']['ingredients'])
+	print(content.json()['recipe']['ingredients'])
 
 def get_missing_ingredients(recipe_id, ingredient_list):
 	'''
@@ -115,13 +117,13 @@ def get_missing_ingredients(recipe_id, ingredient_list):
 
 	url = url_builder(http_address, **kwargs)
 
-	f = requests.get(url)
+	content = requests.get(url)
 
 	your_ingredients = []
 
 	print("\n")
 
-	print( "Recipe name: " + f.json()['recipe']['title'])
+	print( "Recipe name: " + content.json()['recipe']['title'])
 
 	print("************************************************* \n")
 
@@ -132,7 +134,7 @@ def get_missing_ingredients(recipe_id, ingredient_list):
 	while True:
 
 		try:
-			current_ingredient = f.json()['recipe']['ingredients'][count]
+			current_ingredient = content.json()['recipe']['ingredients'][count]
 
 			for ingredient in ingredient_list:
 
@@ -142,16 +144,16 @@ def get_missing_ingredients(recipe_id, ingredient_list):
 				'''
 				if ingredient.lower() in current_ingredient.lower():
 					
-					#print('\n')
+					
 
 					if ingredient.lower() == len(current_ingredient.lower()):
-						#print("YOU HAVE THIS INGREDIENT: " + current_ingredient)
+						
 						your_ingredients.append( "YOU HAVE THIS INGREDIENT: " + current_ingredient )
 					else:
-						#print("YOU HAVE A SIMILAR INGREDIENT: " + current_ingredient)
+						
 						your_ingredients.append( "YOU HAVE A SIMILAR INGREDIENT: " + current_ingredient )
 
-					#print('\n')
+					
 
 					break
 
@@ -167,15 +169,15 @@ def get_missing_ingredients(recipe_id, ingredient_list):
 					
 					if temp.lower() in current_ingredient.lower():
 						
-						#print('\n')
+						
 
 						if temp.lower() == len(current_ingredient.lower()):
-							#print("YOU HAVE THIS INGREDIENT: " + current_ingredient)
+							
 							your_ingredients.append( "YOU HAVE THIS INGREDIENT: " + current_ingredient )
 						else:
-							#print("YOU HAVE EXCESS OF THIS INGREDIENT: " + current_ingredient)
+							
 							your_ingredients.append( "YOU HAVE EXCESS OF THIS INGREDIENT: " + current_ingredient )
-						#print('\n')
+						
 
 						break
 
@@ -191,15 +193,15 @@ def get_missing_ingredients(recipe_id, ingredient_list):
 
 					if temp.lower() in current_ingredient.lower():
 						
-						#print('\n')
+						
 
 						if temp.lower() == len(current_ingredient.lower()):
-							#print("YOU HAVE THIS INGREDIENT: " + current_ingredient)
+							
 							your_ingredients.append( "YOU HAVE THIS INGREDIENT: " + current_ingredient )
 						else:
-							#print("YOU HAVE EXCESS OF THIS INGREDIENT: " + current_ingredient)
+							
 							your_ingredients.append( "YOU HAVE EXCESS OF THIS INGREDIENT: " + current_ingredient )
-						#print('\n')
+						
 
 						break
 
