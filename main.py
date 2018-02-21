@@ -1,8 +1,7 @@
 import urllib
-
 import requests
 import json
-
+import sys
 
 
 #This sets up the API key from a .txt file in the same directory
@@ -16,16 +15,39 @@ if 'API_KEY' in contents:
 
 search_file.close()
 
+def cmd_line():
+	'''
+	Function that takes in ingredients from argv and places them in a list for later use
+	'''
+
+	ingredients = []
+
+	for value in sys.argv[1:]:
+		ingredients.append(value)
+
+	return ingredients
+
 
 def read_from_cmd():
 	'''
 	Function that takes in ingredients from command line and places them in a list for later use
 	'''
+
 	ingredients = []
 
 	while True:
 
 		text = raw_input("Please enter an ingredient. Type 'exit' when you are satisfied. \n")
+
+		#Checking to make sure the entered ingredient is in the correct format
+		if text[ len(text) - 1 ].isdigit() == True:
+			print("Please enter numeric values before the ingredient. \n")
+			read_from_cmd()
+
+		#Checking to see if the user actually entered an ingredient, if not reprompt them to
+		if text.lower() == "exit" and len(ingredients) == 0:
+			print("Please enter some ingredients so we can find you a yummy recipe. \n")
+			read_from_cmd()
 
 		#Base case for exiting this loop, had it convert the user input to lowercase so it wouldn't
 		# matter if they entered "exit" or "EXIT" or any other form.
@@ -46,6 +68,7 @@ def url_builder(request_type, **kwargs):
 	in a function, which in turn makes it easier to encode these arguments
 	into a url format. 
 	'''
+
 	request = { 'key' : API_Key }
 
 	final = request_type + '?' + urllib.urlencode(request)
@@ -71,6 +94,7 @@ def search_by_trending(q , page ):
 
 	url = url_builder(http_address, **kwargs)
 
+	#Here we do the GET request in order to recieve all of the data based at that url
 	content = requests.get(url)
 
 	#I return the first value since that value is the most trending recipe id
@@ -88,6 +112,7 @@ def search_by_rating(q , page ):
 	
 	url = url_builder(http_address, **kwargs)
 
+	#Here we do the GET request in order to recieve all of the data based at that url
 	content = requests.get(url)
 
 	#I return the first value since that value is the most highly rated recipe id
@@ -97,12 +122,14 @@ def get_recipe(recipe_id):
 	'''
 	Function that prints out the ingredients of a recipe
 	'''
+
 	http_address = 'http://food2fork.com/api/get'
 
 	kwargs = { 'rId': recipe_id }
 
 	url = url_builder(http_address, **kwargs)
 
+	#Here we do the GET request in order to recieve all of the data based at that url
 	content = requests.get(url)
 
 	print(content.json()['recipe']['ingredients'])
@@ -111,19 +138,26 @@ def get_missing_ingredients(recipe_id, ingredient_list):
 	'''
 	Function that prints the missing ingredients and current ingredients you have
 	'''
+
 	http_address = 'http://food2fork.com/api/get'
 
 	kwargs = { 'rId': recipe_id }
 
 	url = url_builder(http_address, **kwargs)
 
+	#Here we do the GET request in order to recieve all of the data based at that url
 	content = requests.get(url)
 
+	#This is a list from where the print statements for your ingredients will be stored to
 	your_ingredients = []
 
-	print("\n")
+	#This dictionary is for later when I check if the recipe utilizes all of the user input ingredients
+	flags = {}
 
-	print( "Recipe name: " + content.json()['recipe']['title'])
+	for food_item in ingredient_list:
+		flags[food_item] = False
+
+	print( "\n" + "Recipe name: " + content.json()['recipe']['title'])
 
 	print("************************************************* \n")
 
@@ -153,7 +187,8 @@ def get_missing_ingredients(recipe_id, ingredient_list):
 						
 						your_ingredients.append( "YOU HAVE A SIMILAR INGREDIENT: " + current_ingredient )
 
-					
+					#Marking that this ingredient was used from the user input list
+					flags[ingredient] = True					
 
 					break
 
@@ -176,8 +211,10 @@ def get_missing_ingredients(recipe_id, ingredient_list):
 							your_ingredients.append( "YOU HAVE THIS INGREDIENT: " + current_ingredient )
 						else:
 							
-							your_ingredients.append( "YOU HAVE EXCESS OF THIS INGREDIENT: " + current_ingredient )
+							your_ingredients.append( "YOU HAVE A SIMILAR INGREDIENT: " + current_ingredient )
 						
+						#Marking that this ingredient was used from the user input list
+						flags[ingredient] = True
 
 						break
 
@@ -200,8 +237,10 @@ def get_missing_ingredients(recipe_id, ingredient_list):
 							your_ingredients.append( "YOU HAVE THIS INGREDIENT: " + current_ingredient )
 						else:
 							
-							your_ingredients.append( "YOU HAVE EXCESS OF THIS INGREDIENT: " + current_ingredient )
+							your_ingredients.append( "YOU HAVE A SIMILAR INGREDIENT: " + current_ingredient )
 						
+						#Marking that this ingredient was used from the user input list
+						flags[ingredient] = True						
 
 						break
 
@@ -220,19 +259,45 @@ def get_missing_ingredients(recipe_id, ingredient_list):
 		except IndexError:
 			break
 
-	print("\n")
-	print("Your ingredients: \n")
+	print( "\n" + "Your ingredients: \n")
+
+	#Here I am checking if all of the ingredients are used in the returned recipe from the user input
+	for food_item in flags.keys():
+		if flags[food_item] == False:
+			print("YOU DON'T NEED THIS INGREDIENT: " + food_item + "\n")
 
 	for ingredient in your_ingredients:
-		print(ingredient)
-	print("\n")
+		print(ingredient + "\n")
+
 def runner():
 	'''
 	This function simply does all the magic, basically gets the ingredients from command line, 
 	searches for a recipe that has some of those ingredients, and prints the missing ingredients
 	from the recipe
 	'''
+
+	#Calling the function which gathers the ingredients from the command line
 	ingredient_list = read_from_cmd()
+
+	'''
+	This try-except block is for the case in which if the search for a trending recipe returns
+	nothing, so in that case I search for a highly rated recipe instead
+	'''
+	try:
+		recipe_id = search_by_trending(ingredient_list, '1')
+	
+	except IndexError:
+		recipe_id = search_by_rating(ingredient_list, '1') 
+
+	get_missing_ingredients( recipe_id, ingredient_list )
+
+def runner_with_argv():
+	'''
+	This function simply does all the magic, basically gets the ingredients from command line, 
+	searches for a recipe that has some of those ingredients, and prints the missing ingredients
+	from the recipe
+	'''
+	ingredient_list = cmd_line()
 
 	'''
 	This try-except block is for the case in which if the search for a trending recipe returns
@@ -248,3 +313,6 @@ def runner():
 
 
 runner()
+
+#runner_with_argv()
+
