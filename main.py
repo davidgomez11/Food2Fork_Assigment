@@ -37,21 +37,25 @@ def read_from_cmd():
 
 	while True:
 
-		text = raw_input("Please enter an ingredient. Type 'exit' when you are satisfied. \n")
+		text = raw_input("Please enter an ingredient." + "\n" + "Type 'done' when you are satisfied. " + "\n" + "Type 'quit' if you want to exit the program. \n")
+
+		#Case for if the user wants to quit the program
+		if text.lower() == "quit":
+			sys.exit("Quitting.. \n")
 
 		#Checking to make sure the entered ingredient is in the correct format
 		if text[ len(text) - 1 ].isdigit() == True:
 			print("Please enter numeric values before the ingredient. \n")
 			read_from_cmd()
 
-		#Checking to see if the user actually entered an ingredient, if not reprompt them to
-		if text.lower() == "exit" and len(ingredients) == 0:
-			print("Please enter some ingredients so we can find you a yummy recipe. \n")
+		#Checking to see if the user actually entered an ingredient, if not reprompt them to do so
+		if text.lower() == "done" and len(ingredients) == 0:
+			print("\n" + "Please put in an ingredient so we can provide you with a yummy recipe! \n")
 			read_from_cmd()
 
 		#Base case for exiting this loop, had it convert the user input to lowercase so it wouldn't
-		# matter if they entered "exit" or "EXIT" or any other form.
-		if text.lower() == "exit":
+		# matter if they entered "done" or "DONE" or any other form.
+		if text.lower() == "done":
 			break
 
 		ingredients.append(text)
@@ -261,7 +265,7 @@ def get_missing_ingredients(recipe_id, ingredient_list):
 
 	print( "\n" + "Your ingredients: \n")
 
-	#Here I am checking if all of the ingredients are used in the returned recipe from the user input
+	#Here we are checking if all of the ingredients are used in the returned recipe from the user input
 	for food_item in flags.keys():
 		if flags[food_item] == False:
 			print("YOU DON'T NEED THIS INGREDIENT: " + food_item + "\n")
@@ -287,13 +291,24 @@ def runner():
 		recipe_id = search_by_trending(ingredient_list, '1')
 	
 	except IndexError:
-		recipe_id = search_by_rating(ingredient_list, '1') 
+		print("\n" + "Runnning search by rating. \n")
+
+		
+		'''
+		This try-except block is for the case in which the search by rating fails so the program
+		tells the user to re-run it again and exits.
+		'''
+		try:
+			recipe_id = search_by_rating(ingredient_list, '1') 
+		except IndexError:
+			print("Didn't find a recipe. Please run again. \n") 
+			sys.exit()
 
 	get_missing_ingredients( recipe_id, ingredient_list )
 
 def runner_with_argv():
 	'''
-	This function simply does all the magic, basically gets the ingredients from command line, 
+	This function simply does all the magic, basically gets the ingredients from argv, 
 	searches for a recipe that has some of those ingredients, and prints the missing ingredients
 	from the recipe
 	'''
@@ -309,7 +324,18 @@ def runner_with_argv():
 		recipe_id = search_by_trending(ingredient_list, '1')
 	
 	except IndexError:
-		recipe_id = search_by_rating(ingredient_list, '1') 
+		print("\n" + "Runnning search by rating. \n")
+
+
+		'''
+		This try-except block is for the case in which the search by rating fails so the program
+		tells the user to re-run it again and exits.
+		'''
+		try:
+			recipe_id = search_by_rating(ingredient_list, '1') 
+		except IndexError:
+			print("Didn't find a recipe. Please run again. \n")
+			sys.exit()
 
 	get_missing_ingredients( recipe_id, ingredient_list )
 
