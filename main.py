@@ -297,6 +297,8 @@ def runner_with_argv():
 	searches for a recipe that has some of those ingredients, and prints the missing ingredients
 	from the recipe
 	'''
+
+	#Calling the function which gathers the ingredients from argv
 	ingredient_list = cmd_line()
 
 	'''
